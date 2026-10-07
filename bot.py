@@ -25,10 +25,10 @@ async def on_ready():
     print(f"✅ Bot {bot.user} online!")
     await bot.change_presence(
         status=discord.Status.idle,
-        activity=discord.Game(name="Eu não sou um cosplay Pikachu😡")
+        activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡")
     )
     try:
-        node = wavelink.Node(uri='https://lava-v4.ajieblogs.eu.org:443', password='https://dsc.gg/ajidevserver')
+        node = wavelink.Node(uri='https://lavalink4.alfari.id:443', password='youshallnotpass')
         await wavelink.Pool.connect(nodes=[node], client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")
     except Exception as e:
@@ -39,18 +39,18 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-@bot.tree.command(name="play", description="Toca uma música")
+@bot.tree.command(name="tocar", description="Toca uma música")
 async def play(interaction: discord.Interaction, busca: str):
     await interaction.response.defer()
     if not interaction.user.voice:
         return await interaction.followup.send("Entra em um canal de voz primeiro! 🎧")
     try:
-        player = await wavelink.Pool.fetch_player(interaction.guild)
+        player = interaction.guild.voice_client
         if not player:
-            player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
+        player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         tracks = await wavelink.Playable.search(busca)
         if not tracks:
-            return await interaction.followup.send("Não achei 😢")
+            return await interaction.followup.send("Não achei a música escolhida, por favor tente de outra maneira😢")
         track = tracks[0]
         await player.queue.put_wait(track)
         if not player.playing:

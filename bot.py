@@ -2,13 +2,19 @@ import discord
 from discord.ext import commands
 import wavelink
 import os
-from threading import Thread
 from flask import Flask
+import threading
 
-app = Flask('')
-@app.route('/')
-def home(): return "Bot online!"
-def run_web(): app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+app_flask = Flask(__name__)
+@app_flask.route('/')
+def home():
+    return "VainBot Online! 🟢"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app_flask.run(host='0.0.0.0', port=port)
+
+threading.Thread(target=run_flask, daemon=True).start()
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,27 +22,42 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Bot {bot.user} online!")
+    print(f"✅ Bot {bot.user} online!")
     await bot.change_presence(
         status=discord.Status.idle,
-        activity=discord.Activity(type=discord.ActivityType.listening, name="/play 🎧")
+        activity=discord.Game(name="Eu não sou um cosplay Pikachu😡")
     )
-    node = wavelink.Node(uri='https://lava-v4.ajieblogs.eu.org:443', password='https://dsc.gg/ajidevserver')
-    await wavelink.Pool.connect(client=bot, nodes=[node])
-    await bot.tree.sync()
+    try:
+        node = wavelink.Node(uri='https://lava-v4.ajieblogs.eu.org:443', password='https://dsc.gg/ajidevserver')
+        await wavelink.Pool.connect(nodes=[node], client=bot, cache_capacity=100)
+        print("✅ Lavalink conectado!")
+    except Exception as e:
+        print(f"❌ Erro Lavalink: {e}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ {len(synced)} comandos sincronizados")
+    except Exception as e:
+        print(e)
 
-@bot.tree.command(name="play", description="Toca uma musica")
+@bot.tree.command(name="play", description="Toca uma música")
 async def play(interaction: discord.Interaction, busca: str):
+    await interaction.response.defer()
     if not interaction.user.voice:
-        return await interaction.response.send_message("Entra em um canal de voz!", ephemeral=True)
-    if not interaction.guild.voice_client:
-        await interaction.user.voice.channel.connect(cls=wavelink.Player)
-    player = interaction.guild.voice_client
-    tracks = await wavelink.Playable.search(busca)
-    if not tracks:
-        return await interaction.response.send_message("Nao achei nada", ephemeral=True)
-    await interaction.response.send_message(f"Tocando: **{tracks[0].title}**")
-    await player.play(tracks[0])
+        return await interaction.followup.send("Entra em um canal de voz primeiro! 🎧")
+    try:
+        player = await wavelink.Pool.fetch_player(interaction.guild)
+        if not player:
+            player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
+        tracks = await wavelink.Playable.search(busca)
+        if not tracks:
+            return await interaction.followup.send("Não achei 😢")
+        track = tracks[0]
+        await player.queue.put_wait(track)
+        if not player.playing:
+            await player.play(player.queue.get())
+        await interaction.followup.send(f"Tocando agora: **{track.title}** 🎶")
+    except Exception as e:
+        print(e)
+        await interaction.followup.send(f"Erro: {e}")
 
-Thread(target=run_web).start()
-bot.run(os.getenv("DISCORD_TOKEN"))
+bot.run(os.environ.get("DISCORD_TOKEN"))

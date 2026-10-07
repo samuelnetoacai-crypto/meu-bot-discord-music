@@ -2,6 +2,13 @@ import discord
 from discord.ext import commands
 import wavelink
 import os
+from threading import Thread
+from flask import Flask
+
+app = Flask('')
+@app.route('/')
+def home(): return "Bot online!"
+def run_web(): app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -31,4 +38,5 @@ async def play(interaction: discord.Interaction, busca: str):
     await interaction.response.send_message(f"Tocando: **{tracks[0].title}**")
     await player.play(tracks[0])
 
+Thread(target=run_web).start()
 bot.run(os.getenv("DISCORD_TOKEN"))

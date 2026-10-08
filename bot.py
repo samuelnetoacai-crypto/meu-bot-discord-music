@@ -423,17 +423,17 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
             await interaction.followup.send(f"Erro! `{e}`", ephemeral=True)
 # ================= MINERAÇÃO =================
 MINERIOS = [
-    {"nome": "Pedra", "emoji": "🪨", "chance": 30, "valor": 1, "tier": 1},
-    {"nome": "Carvão", "emoji": "⚫", "chance": 20, "valor": 3, "tier": 1},
-    {"nome": "Cobre", "emoji": "🟠", "chance": 15, "valor": 8, "tier": 2},
-    {"nome": "Ferro", "emoji": "⛓️", "chance": 12, "valor": 15, "tier": 2},
-    {"nome": "Ouro", "emoji": "🟡", "chance": 8, "valor": 35, "tier": 3},
-    {"nome": "Lapis Lazuli", "emoji": "🔵", "chance": 5, "valor": 60, "tier": 3},
-    {"nome": "Redstone", "emoji": "🔴", "chance": 4, "valor": 90, "tier": 3},
-    {"nome": "Esmeralda", "emoji": "🟢", "chance": 2.5, "valor": 200, "tier": 4},
-    {"nome": "Diamante", "emoji": "💎", "chance": 1.5, "valor": 500, "tier": 4},
-    {"nome": "Netherita", "emoji": "⬛", "chance": 0.7, "valor": 1500, "tier": 5},
-    {"nome": "Cristal do Vazio", "emoji": "🌌", "chance": 0.3, "valor": 5000, "tier": 5},
+    {"nome": "Pedra", "emoji": "🪨", "chance": 30, "valor": 100, "tier": 1},
+    {"nome": "Carvão", "emoji": "⚫", "chance": 20, "valor": 300, "tier": 1},
+    {"nome": "Cobre", "emoji": "🟠", "chance": 15, "valor": 600, "tier": 2},
+    {"nome": "Ferro", "emoji": "⛓️", "chance": 12, "valor": 1400, "tier": 2},
+    {"nome": "Ouro", "emoji": "🟡", "chance": 8, "valor": 3000, "tier": 3},
+    {"nome": "Lapis Lazuli", "emoji": "🔵", "chance": 5, "valor": 6000, "tier": 3},
+    {"nome": "Redstone", "emoji": "🔴", "chance": 4, "valor": 10000, "tier": 3},
+    {"nome": "Esmeralda", "emoji": "🟢", "chance": 2.5, "valor": 20000, "tier": 4},
+    {"nome": "Diamante", "emoji": "💎", "chance": 1.5, "valor": 40000, "tier": 4},
+    {"nome": "Netherita", "emoji": "⬛", "chance": 0.7, "valor": 150000, "tier": 5},
+    {"nome": "Cristal do Vazio", "emoji": "🌌", "chance": 0.3, "valor": 500000, "tier": 5},
 ]
 PICARETAS = {
     1: {"nome": "Madeira", "max_tier": 2, "preco": 0, "emoji": "🪵"},

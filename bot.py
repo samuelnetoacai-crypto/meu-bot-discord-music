@@ -413,7 +413,7 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
 
     try:
         await destino.send(embed=embed)
-                await interaction.response.send_message(f"Embed enviado em {destino.mention} ✅", ephemeral=True)
+        await interaction.response.send_message(f"Embed enviado em {destino.mention} ✅", ephemeral=True)
     except Exception as e:
         if not interaction.response.is_done():
             await interaction.response.send_message(f"Erro! Verifica o link da imagem e se tenho permissão no {destino.mention}\n`{e}`", ephemeral=True)

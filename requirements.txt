@@ -1,5 +1,5 @@
-discord.py
+discord.py[voice]
 yt-dlp
 Flask
-PyNaCl
 imageio-ffmpeg
+PyNaCl

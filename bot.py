@@ -9,17 +9,18 @@ import imageio_ffmpeg
 
 app_flask = Flask(__name__)
 @app_flask.route('/')
-def home(): return "Online"
+def home():
+    return "Online"
 threading.Thread(target=app_flask.run, kwargs={'host':'0.0.0.0','port':int(os.environ.get("PORT", 10000))}, daemon=True).start()
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="*", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"Online {bot.user}")
-    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu"))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawaii de Pikachu"))
     await bot.tree.sync()
 
 @bot.tree.command(name="tocar", description="Toca musica")
@@ -45,9 +46,10 @@ async def tocar(interaction: discord.Interaction, busca: str):
         title = info.get('title', busca)
 
         ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
-        vc.stop()
-ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-vc.play(discord.FFmpegPCMAudio(url, executable=ffmpeg_exe, **ffmpeg))
+        if vc.is_playing():
+            vc.stop()
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        vc.play(discord.FFmpegPCMAudio(url, executable=ffmpeg_exe, **ffmpeg))
         await interaction.followup.send(f"Tocando: **{title}**")
     except Exception as e:
         print(f"ERRO: {e}")

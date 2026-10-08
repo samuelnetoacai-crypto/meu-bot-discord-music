@@ -28,7 +28,7 @@ async def on_ready():
         activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡")
     )
     try:
-        node = wavelink.Node(uri='https://lavalink4.alfari.id:443', password='youshallnotpass')
+        node = wavelink.Node(uri='https://lavalink.heavencloud.in:443', password='heavencloud')
         await wavelink.Pool.connect(nodes=[node], client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")
     except Exception as e:

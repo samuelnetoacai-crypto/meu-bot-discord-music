@@ -9,6 +9,7 @@ from datetime import timedelta
 from flask import Flask
 import threading
 
+# Servidor fake pro Render não dormir
 app_flask = Flask(__name__)
 @app_flask.route('/')
 def home():
@@ -66,7 +67,14 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"Online {bot.user}")
     await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu"))
-    await bot.tree.sync()
+    try:
+        synced = await bot.tree.sync()
+        print(f"Syncou {len(synced)} comandos globais")
+        for guild in bot.guilds:
+            await bot.tree.sync(guild=guild)
+            print(f"Syncou instantaneo em {guild.name}")
+    except Exception as e:
+        print(f"Erro sync: {e}")
 
 # --- ECONOMIA ---
 @bot.tree.command(name="banco", description="Veja quantas estrelas você tem")
@@ -111,7 +119,7 @@ async def rank(interaction: discord.Interaction):
     desc = "".join([f"{'🥇' if i==1 else '🥈' if i==2 else '🥉' if i==3 else f'**{i}°**'} <@{uid}> - **{est} ⭐**\n" for i, (uid, est) in enumerate(ranking, 1)])
     await interaction.response.send_message(embed=discord.Embed(title="Estrelas Rank 🏆", description=desc, color=0xFFD700))
 
-@bot.tree.command(name="editar-estrelas", description="")
+@bot.tree.command(name="editar-estrelas", description="Editar estrelas de um membro (ADM)")
 @app_commands.default_permissions(administrator=True)
 async def editar_estrelas(interaction: discord.Interaction, usuario: discord.Member, quantidade: int):
     if not interaction.user.guild_permissions.administrator:
@@ -126,11 +134,11 @@ async def editar_estrelas(interaction: discord.Interaction, usuario: discord.Mem
         await interaction.response.send_message(embed=discord.Embed(title="Editar 🛠️", description=f"Removido **{abs(quantidade)} ⭐** de {usuario.mention}! Total: **{total} ⭐**", color=0xFF0000), ephemeral=True)
 
 # --- MODERAÇÃO ---
-@bot.tree.command(name="banir", description="Bane um membro")
+@bot.tree.command(name="banir", description="Bane um membro do servidor")
 @app_commands.default_permissions(ban_members=True)
 async def banir(interaction: discord.Interaction, usuario: discord.Member, motivo: str = "Sem motivo"):
     if not interaction.user.guild_permissions.ban_members:
-        await interaction.response.send_message("Sem permissão!", ephemeral=True)
+        await interaction.response.send_message("Você não tem permissão!", ephemeral=True)
         return
     try:
         await usuario.ban(reason=motivo)
@@ -138,11 +146,11 @@ async def banir(interaction: discord.Interaction, usuario: discord.Member, motiv
     except Exception as e:
         await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="expulsar", description="Expulsa um membro")
+@bot.tree.command(name="expulsar", description="Expulsa um membro do servidor")
 @app_commands.default_permissions(kick_members=True)
 async def expulsar(interaction: discord.Interaction, usuario: discord.Member, motivo: str = "Sem motivo"):
     if not interaction.user.guild_permissions.kick_members:
-        await interaction.response.send_message("Sem permissão!", ephemeral=True)
+        await interaction.response.send_message("Você não tem permissão!", ephemeral=True)
         return
     try:
         await usuario.kick(reason=motivo)
@@ -157,7 +165,7 @@ async def mutar(interaction: discord.Interaction, usuario: discord.Member, minut
         await interaction.response.send_message("Sem permissão!", ephemeral=True)
         return
     if minutos <= 0 or minutos > 10080:
-        await interaction.response.send_message("Use 1 a 10080 minutos", ephemeral=True)
+        await interaction.response.send_message("Use de 1 a 10080 minutos (7 dias)", ephemeral=True)
         return
     try:
         await usuario.timeout(timedelta(minutes=minutos), reason=motivo)
@@ -183,12 +191,11 @@ async def desmutar(interaction: discord.Interaction, usuario: discord.Member):
 @app_commands.default_permissions(manage_messages=True)
 async def limpar(interaction: discord.Interaction, quantidade: int):
     if not interaction.user.guild_permissions.manage_messages:
-        await interaction.response.send_message("Você não tem permissão pra apagar mensagens!", ephemeral=True)
+        await interaction.response.send_message("Você não tem permissão pra apagar!", ephemeral=True)
         return
     if quantidade <= 0 or quantidade > 100:
         await interaction.response.send_message("Use um número entre 1 e 100!", ephemeral=True)
         return
-
     await interaction.response.defer(ephemeral=True)
     try:
         apagadas = await interaction.channel.purge(limit=quantidade)

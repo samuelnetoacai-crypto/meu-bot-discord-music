@@ -380,5 +380,39 @@ async def caixa_misteriosa(interaction: discord.Interaction):
         description=f"{interaction.user.mention} pagou {preco} ⭐ e ganhou **{ganho} ⭐**!\n**Lucro:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2" if lucro >= 0 else f"{interaction.user.mention} pagou {preco} ⭐ e ganhou só **{ganho} ⭐**!\n**Prejuízo:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2",
         color=cor
     ))
+@bot.tree.command(name="criar-embed", description="Cria um embed personalizado (apenas administradores)")
+@app_commands.describe(
+    titulo="Título do embed",
+    descricao="Texto/descrição do embed",
+    cor="Cor em hexadecimal ex: #FFD700 ou #FF0000 (padrão amarelo)",
+    imagem="Link da imagem (opcional)"
+)
+async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: str, cor: str = "#FFD700", imagem: str = None):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("Você precisa ter permissão de **Administrador** pra usar isso! 🔒", ephemeral=True)
+        return
 
+    # Converte #FFD700 pra número
+    try:
+        cor_limpa = cor.replace("#", "").strip()
+        cor_final = int(cor_limpa, 16)
+    except:
+        await interaction.response.send_message(f"Cor inválida `{cor}`! Use formato #FFD700", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=titulo,
+        description=descricao,
+        color=cor_final
+    )
+    embed.set_footer(text=f"Criado por {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
+
+    if imagem:
+        embed.set_image(url=imagem)
+
+    try:
+        await interaction.response.send_message(embed=embed)
+    except Exception as e:
+        await interaction.response.send_message(f"Erro ao criar embed! Verifica se o link da imagem é válido.\n`{e}`", ephemeral=True)
+        
 bot.run(os.environ.get("DISCORD_TOKEN"))

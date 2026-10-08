@@ -28,8 +28,12 @@ async def on_ready():
         activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡")
     )
     try:
-        node = wavelink.Node(uri='https://lavalink.heavencloud.in:443', password='heavencloud')
-        await wavelink.Pool.connect(nodes=[node], client=bot, cache_capacity=100)
+    nodes = [
+        wavelink.Node(uri='https://lava-v4.ajieblogs.my.eu.org:443', password='https://dsc.gg/ajidevserver'),
+        wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass'),
+        wavelink.Node(uri='https://lavalinkv4-id.serenetia.com:443', password='https://dsc.gg/serenetia')
+    ]
+    await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")
     except Exception as e:
         print(f"❌ Erro Lavalink: {e}")

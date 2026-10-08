@@ -493,7 +493,7 @@ async def inventario(interaction: discord.Interaction):
     desc += f"\n**Total se vender tudo: {total} ⭐**"
     await interaction.response.send_message(embed=discord.Embed(title=f"Inventário - {interaction.user.display_name}", description=desc, color=0x2b2d31))
 
-@bot.tree.command(name="vender_Tudo", description="Venda TODOS os minérios")
+@bot.tree.command(name="vender_tudo", description="Venda TODOS os minérios")
 async def vender_tudo(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)

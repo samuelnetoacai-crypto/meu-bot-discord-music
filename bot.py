@@ -202,7 +202,7 @@ async def limpar(interaction: discord.Interaction, quantidade: int):
         await interaction.followup.send(embed=discord.Embed(title="Limpar 🧹", description=f"Apagadas **{len(apagadas)}** mensagens!", color=0x00BFFF), ephemeral=True)
     except Exception as e:
         await interaction.followup.send(f"Erro ao limpar: {e}", ephemeral=True)
-        ROUBO_FILE = "roubo.json"
+ROUBO_FILE = "roubo.json"
 CAIXA_FILE = "caixa.json"
 
 def carregar_roubo():
@@ -213,6 +213,7 @@ def carregar_roubo():
             return json.load(f)
     except:
         return {}
+
 def salvar_roubo(data):
     with open(ROUBO_FILE, "w") as f:
         json.dump(data, f)
@@ -225,43 +226,76 @@ def carregar_caixa():
             return json.load(f)
     except:
         return {}
+
 def salvar_caixa(data):
     with open(CAIXA_FILE, "w") as f:
         json.dump(data, f)
 
-@bot.tree.command(name="roubar", description="Tente roubar de 1200 a 4000 estrelas de alguém (30% de chance)")
+@bot.tree.command(name="roubar", description="Tente roubar de 1200 a 4000 sonhos (máx 3 por dia)")
 async def roubar(interaction: discord.Interaction, vitima: discord.Member):
-    if vitima.id == interaction.user.id or vitima.bot:
-        await interaction.response.send_message("Alvo inválido!", ephemeral=True)
-        return
-    roubo_data = carregar_roubo()
-    uid = str(interaction.user.id)
-    vid = str(vitima.id)
-    agora = time.time()
-    chave = f"{uid}_{vid}"
-    if chave in roubo_data and agora - roubo_data[chave] < 86400:
-        tr = 86400 - (agora - roubo_data[chave])
-        h = int(tr // 3600)
-        await interaction.response.send_message(f"Você já tentou roubar {vitima.mention} nas últimas 24h! Espere **{h}h**", ephemeral=True)
-        return
-    if pegar_estrelas(vitima.id) < 1200:
-        await interaction.response.send_message(f"{vitima.mention} tem menos de 1200 ⭐, não dá pra roubar", ephemeral=True)
-        return
-    if pegar_estrelas(interaction.user.id) < 200:
-        await interaction.response.send_message("Você precisa de pelo menos 200 ⭐ pra tentar roubar", ephemeral=True)
-        return
-    roubo_data[chave] = agora
-    salvar_roubo(roubo_data)
-    if random.random() < 0.30:
-        quantia = random.randint(1200, 4000)
-        quantia = min(quantia, pegar_estrelas(vitima.id))
-        remover_estrelas(vitima.id, quantia)
-        adicionar_estrelas(interaction.user.id, quantia)
-        await interaction.response.send_message(embed=discord.Embed(title="Roubo Sucesso! 🦹‍♂️", description=f"{interaction.user.mention} roubou **{quantia} ⭐** de {vitima.mention}! 💰", color=0x00FF00))
-    else:
-        multa = random.randint(100, 300)
-        remover_estrelas(interaction.user.id, multa)
-        await interaction.response.send_message(embed=discord.Embed(title="Roubo Falhou! 🚨", description=f"{interaction.user.mention} foi pego tentando roubar {vitima.mention} e perdeu **{multa} ⭐** de multa! 🤡", color=0xFF0000))
+    try:
+        if vitima.id == interaction.user.id or vitima.bot:
+            await interaction.response.send_message("Alvo inválido!", ephemeral=True)
+            return
+
+        if not os.path.exists(ROUBO_FILE):
+            salvar_roubo({})
+
+        roubo_data = carregar_roubo()
+        uid = str(interaction.user.id)
+        vid = str(vitima.id)
+        agora = time.time()
+
+        historico = roubo_data.get(uid, [])
+        historico = [h for h in historico if agora - h['tempo'] < 86400]
+
+        if len(historico) >= 3:
+            proximo = min(h['tempo'] for h in historico) + 86400
+            falta = int(proximo - agora)
+            h = falta // 3600
+            m = (falta % 3600) // 60
+            await interaction.response.send_message(f"Limite diário! Você já fez 3 roubos hoje. Volta em **{h}h {m}m** ⏳", ephemeral=True)
+            return
+
+        for h in historico:
+            if h['vitima'] == vid:
+                falta = int(86400 - (agora - h['tempo']))
+                hh = falta // 3600
+                await interaction.response.send_message(f"Você já roubou {vitima.mention} hoje! Espere **{hh}h** pra roubar de novo 🔒", ephemeral=True)
+                return
+
+        if pegar_estrelas(vitima.id) < 1200:
+            await interaction.response.send_message(f"{vitima.mention} tem menos de 1200 ⭐", ephemeral=True)
+            return
+        if pegar_estrelas(interaction.user.id) < 200:
+            await interaction.response.send_message(f"Você precisa de 200 ⭐ pra roubar", ephemeral=True)
+            return
+
+        historico.append({"vitima": vid, "tempo": agora})
+        roubo_data[uid] = historico
+        salvar_roubo(roubo_data)
+
+        if random.random() < 0.30:
+            quantia = random.randint(1200, 4000)
+            quantia = min(quantia, pegar_estrelas(vitima.id))
+            remover_estrelas(vitima.id, quantia)
+            adicionar_estrelas(interaction.user.id, quantia)
+            await interaction.response.send_message(embed=discord.Embed(
+                title="Roubo Sucesso! 🦹‍♂️",
+                description=f"{interaction.user.mention} roubou **{quantia} ⭐** de {vitima.mention}! 💰\nRoubos hoje: {len(historico)}/3",
+                color=0x00FF00))
+        else:
+            multa = random.randint(100, 300)
+            remover_estrelas(interaction.user.id, multa)
+            await interaction.response.send_message(embed=discord.Embed(
+                title="Roubo Falhou! 🚨",
+                description=f"{interaction.user.mention} foi pego tentando roubar {vitima.mention} e perdeu **{multa} ⭐**!\nRoubos hoje: {len(historico)}/3 (70% falha)",
+                color=0xFF0000))
+
+    except Exception as e:
+        print(f"ERRO roubar: {e}")
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
 @bot.tree.command(name="roleta", description="Gire a roleta e aposte suas estrelas")
 @app_commands.describe(quantidade="Quanto vai apostar", escolha="vermelho, preto, ou um numero de 0 a 14")

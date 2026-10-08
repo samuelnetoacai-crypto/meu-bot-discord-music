@@ -47,7 +47,7 @@ async def play(interaction: discord.Interaction, busca: str):
     try:
         player = interaction.guild.voice_client
         if not player:
-        player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
+            player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         tracks = await wavelink.Playable.search(busca)
         if not tracks:
             return await interaction.followup.send("Não achei a música escolhida, por favor tente de outra maneira😢")

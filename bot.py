@@ -419,5 +419,118 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
             await interaction.response.send_message(f"Erro! Verifica o link da imagem e se tenho permissão no {destino.mention}\n`{e}`", ephemeral=True)
         else:
             await interaction.followup.send(f"Erro! `{e}`", ephemeral=True)
-        
+@tree.command(name="minerar", description="Minere (10x por dia)")
+async def minerar(interaction: discord.Interaction):
+    dados = carregar_dados()
+    uid = str(interaction.user.id)
+    if uid not in dados:
+        dados[uid] = {"minerios": {}, "estrelas": 0, "picareta": 1, "min_dia": 0, "ultimo_reset": datetime.now().isoformat()}
+    ultimo = datetime.fromisoformat(dados[uid]["ultimo_reset"])
+    if datetime.now() - ultimo >= timedelta(hours=24):
+        dados[uid]["min_dia"] = 0
+        dados[uid]["ultimo_reset"] = datetime.now().isoformat()
+    if dados[uid]["min_dia"] >= 10:
+        resto = (ultimo + timedelta(hours=24) - datetime.now()).seconds // 3600
+        await interaction.response.send_message(f"⛏️ Limite diário! Volta em {resto}h.", ephemeral=True)
+        return
+    minerio = sortear_minerio(dados[uid]["picareta"])
+    dados[uid]["minerios"][minerio["nome"]] = dados[uid]["minerios"].get(minerio["nome"], 0) + 1
+    dados[uid]["min_dia"] += 1
+    salvar_dados(dados)
+    embed = discord.Embed(title=f"⛏️ {minerio['emoji']} {minerio['nome']}!", description=f"Valor: {minerio['valor']} ⭐\nRestam {10-dados[uid]['min_dia']}/10 hoje.", color=0x2b2d31)
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="inventario", description="Veja seus minérios")
+async def inventario(interaction: discord.Interaction):
+    dados = carregar_dados()
+    u = dados.get(str(interaction.user.id))
+    if not u or not u["minerios"]:
+        await interaction.response.send_message("📦 Vazio. Use /minerar", ephemeral=True)
+        return
+    desc = f"⛏️ **{PICARETAS[u['picareta']]['emoji']} {PICARETAS[u['picareta']]['nome']}** | ⭐ {u['estrelas']}\n\n"
+    total = 0
+    for nome, qtd in u["minerios"].items():
+        info = next(m for m in MINERIOS if m["nome"] == nome)
+        desc += f"{info['emoji']} {nome}: {qtd}x ({info['valor']*qtd} ⭐)\n"
+        total += info['valor']*qtd
+    desc += f"\n**Total se vender tudo: {total} ⭐**"
+    await interaction.response.send_message(embed=discord.Embed(title=f"Inventário - {interaction.user.display_name}", description=desc, color=0x2b2d31))
+
+@tree.command(name="vender_tudo", description="Venda TODOS os minérios")
+async def vender_tudo(interaction: discord.Interaction):
+    dados = carregar_dados()
+    uid = str(interaction.user.id)
+    if uid not in dados or not dados[uid]["minerios"]:
+        await interaction.response.send_message("📦 Nada pra vender.", ephemeral=True)
+        return
+    total = 0
+    lista = []
+    for nome, qtd in list(dados[uid]["minerios"].items()):
+        info = next(m for m in MINERIOS if m["nome"] == nome)
+        total += info["valor"] * qtd
+        lista.append(f"{info['emoji']} {nome} x{qtd}")
+    dados[uid]["minerios"] = {}
+    dados[uid]["estrelas"] += total
+    salvar_dados(dados)
+    await interaction.response.send_message(embed=discord.Embed(title="💰 Vendeu tudo!", description="\n".join(lista) + f"\n\n**+{total} ⭐ | Saldo: {dados[uid]['estrelas']} ⭐**", color=0xFFD700))
+
+@tree.command(name="vender_minerio", description="Venda um minério específico")
+@app_commands.describe(minerio="Qual minério", quantidade="Quanto (vazio = tudo desse)")
+async def vender_minerio(interaction: discord.Interaction, minerio: str, quantidade: int = None):
+    dados = carregar_dados()
+    uid = str(interaction.user.id)
+    info = next((m for m in MINERIOS if m["nome"].lower() == minerio.lower()), None)
+    if not info or info["nome"] not in dados.get(uid, {}).get("minerios", {}):
+        await interaction.response.send_message(f"❌ Você não tem {minerio}.", ephemeral=True)
+        return
+    tem = dados[uid]["minerios"][info["nome"]]
+    qtd_vender = quantidade if quantidade and quantidade <= tem else tem
+    ganho = info["valor"] * qtd_vender
+    dados[uid]["minerios"][info["nome"]] -= qtd_vender
+    if dados[uid]["minerios"][info["nome"]] <= 0: del dados[uid]["minerios"][info["nome"]]
+    dados[uid]["estrelas"] += ganho
+    salvar_dados(dados)
+    await interaction.response.send_message(f"💰 Vendeu **{qtd_vender}x {info['emoji']} {info['nome']}** por **{ganho} ⭐**! Saldo: {dados[uid]['estrelas']} ⭐")
+
+@vender_minerio.autocomplete("minerio")
+async def ac_vender(interaction, current: str):
+    return [app_commands.Choice(name=m["nome"], value=m["nome"]) for m in MINERIOS if current.lower() in m["nome"].lower()][:25]
+
+@tree.command(name="loja", description="Evolua sua picareta")
+async def loja(interaction: discord.Interaction):
+    dados = carregar_dados()
+    uid = str(interaction.user.id)
+    lvl = dados.get(uid, {}).get("picareta", 1)
+    estrelas = dados.get(uid, {}).get("estrelas", 0)
+    embed = discord.Embed(title="🛒 Loja de Picaretas", description=f"Suas estrelas: **{estrelas} ⭐**\nAtual: **{PICARETAS[lvl]['nome']}**", color=0x2b2d31)
+    for l, pic in PICARETAS.items():
+        if l == 1: continue
+        status = "✅ Já tem" if l <= lvl else f"💲 {pic['preco']} ⭐ - /comprar {pic['nome']}"
+        embed.add_field(name=f"{pic['emoji']} {pic['nome']}", value=status, inline=False)
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="comprar", description="Compre uma picareta")
+@app_commands.describe(picareta="Qual picareta")
+async def comprar(interaction: discord.Interaction, picareta: str):
+    dados = carregar_dados()
+    uid = str(interaction.user.id)
+    if uid not in dados:
+        await interaction.response.send_message("Minere primeiro! /minerar", ephemeral=True)
+        return
+    alvo = next((lvl for lvl, p in PICARETAS.items() if p["nome"].lower() == picareta.lower()), None)
+    if not alvo or alvo <= dados[uid]["picareta"]:
+        await interaction.response.send_message("Você já tem essa!", ephemeral=True)
+        return
+    if dados[uid]["estrelas"] < PICARETAS[alvo]["preco"]:
+        await interaction.response.send_message(f"Precisa de {PICARETAS[alvo]['preco']} ⭐", ephemeral=True)
+        return
+    dados[uid]["estrelas"] -= PICARETAS[alvo]["preco"]
+    dados[uid]["picareta"] = alvo
+    salvar_dados(dados)
+    await interaction.response.send_message(f"🎉 Comprou **{PICARETAS[alvo]['nome']}**!")
+
+@comprar.autocomplete("picareta")
+async def ac_comprar(interaction, current: str):
+    return [app_commands.Choice(name=p["nome"], value=p["nome"]) for p in PICARETAS.values() if current.lower() in p["nome"].lower()][:25]  
+    
 bot.run(os.environ.get("DISCORD_TOKEN"))

@@ -25,15 +25,15 @@ async def on_ready():
     print(f"✅ Bot {bot.user} online!")
     await bot.change_presence(
         status=discord.Status.idle,
-        activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡")
+        activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu 😡")
     )
     try:
-    nodes = [
-        wavelink.Node(uri='https://lava-v4.ajieblogs.my.eu.org:443', password='https://dsc.gg/ajidevserver'),
-        wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass'),
-        wavelink.Node(uri='https://lavalinkv4-id.serenetia.com:443', password='https://dsc.gg/serenetia')
-    ]
-    await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
+        nodes = [
+            wavelink.Node(uri='https://lava-v4.ajieblogs.my.eu.org:443', password='https://dsc.gg/ajidevserver'),
+            wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass'),
+            wavelink.Node(uri='https://lavalinkv4-id.serenetia.com:443', password='https://dsc.gg/serenetia')
+        ]
+        await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")
     except Exception as e:
         print(f"❌ Erro Lavalink: {e}")
@@ -54,7 +54,7 @@ async def play(interaction: discord.Interaction, busca: str):
             player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         tracks = await wavelink.Playable.search(busca)
         if not tracks:
-            return await interaction.followup.send("Não achei a música escolhida, por favor tente de outra maneira😢")
+            return await interaction.followup.send(f"Não achei a música: {busca}")
         track = tracks[0]
         await player.queue.put_wait(track)
         if not player.playing:

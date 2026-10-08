@@ -23,16 +23,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"✅ Bot {bot.user} online!")
-    await bot.change_presence(
-        status=discord.Status.idle,
-        activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu 😡")
-    )
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡"))
     try:
-    nodes = [
-        wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass', secure=False),
-        wavelink.Node(uri='http://209.126.86.74:2333', password='youshallnotpass', secure=False),
-        wavelink.Node(uri='http://162.19.244.175:2333', password='youshallnotpass', secure=False)
-    ]
+        nodes = [
+            wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass', secure=False),
+            wavelink.Node(uri='http://209.126.86.74:2333', password='youshallnotpass', secure=False)
+        ]
         await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")
     except Exception as e:
@@ -44,7 +40,7 @@ async def on_ready():
         print(e)
 
 @bot.tree.command(name="tocar", description="Toca uma música")
-async def play(interaction: discord.Interaction, busca: str):
+async def tocar(interaction: discord.Interaction, busca: str):
     await interaction.response.defer()
     if not interaction.user.voice:
         return await interaction.followup.send("Entra em um canal de voz primeiro! 🎧")
@@ -54,7 +50,7 @@ async def play(interaction: discord.Interaction, busca: str):
             player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         tracks = await wavelink.Playable.search(busca)
         if not tracks:
-            return await interaction.followup.send(f"Não achei a música: {busca}")
+            return await interaction.followup.send(f"Não achei: {busca}")
         track = tracks[0]
         await player.queue.put_wait(track)
         if not player.playing:

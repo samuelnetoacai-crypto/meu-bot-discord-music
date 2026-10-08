@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Online {bot.user}")
-    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawaii de Pikachu"))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu"))
     await bot.tree.sync()
 
 @bot.tree.command(name="tocar", description="Toca musica")
@@ -32,27 +32,24 @@ async def tocar(interaction: discord.Interaction, busca: str):
         vc = interaction.guild.voice_client
         if not vc:
             vc = await interaction.user.voice.channel.connect()
-
         def get_info():
-             ydl_opts = {
-            'format':'bestaudio/best',
-            'noplaylist':True,
-            'quiet':True,
-            'default_search':'ytsearch',
-            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-            'nocheckcertificate': True,
-                    }
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'noplaylist': True,
+                'quiet': True,
+                'default_search': 'ytsearch',
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                'nocheckcertificate': True,
+            }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(busca, download=False)
                 if 'entries' in info:
                     info = info['entries'][0]
                 return info
-
         info = await asyncio.to_thread(get_info)
         url = info['url']
         title = info.get('title', busca)
-
-        ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
+        ffmpeg = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
         if vc.is_playing():
             vc.stop()
         ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()

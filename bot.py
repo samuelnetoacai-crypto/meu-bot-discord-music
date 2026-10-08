@@ -26,8 +26,11 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay de Pikachu 😡"))
     try:
         nodes = [
-            wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass', secure=False),
-            wavelink.Node(uri='http://209.126.86.74:2333', password='youshallnotpass', secure=False)
+            wavelink.Node(uri='https://lavalink1.albinhy.com:443', password='albinhy.online', secure=True),
+            wavelink.Node(uri='https://lavalinkv4-eu.serenetia.com:443', password='https://dsc.gg/serenetia', secure=True),
+            wavelink.Node(uri='https://lava-v3.ajieblogs.my.eu.org:443', password='https://dsc.gg/ajidevserver', secure=True),
+            wavelink.Node(uri='https://lavalink.clxud.dev:443', password='youshallnotpass', secure=True),
+            wavelink.Node(uri='https://lavalink4.alfari.id:443', password='catonlap', secure=True)
         ]
         await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")

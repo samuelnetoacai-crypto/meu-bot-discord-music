@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import yt_dlp
+import asyncio
 from flask import Flask
 import threading
 
@@ -23,22 +24,32 @@ async def on_ready():
 @bot.tree.command(name="tocar", description="Toca musica")
 async def tocar(interaction: discord.Interaction, busca: str):
     await interaction.response.defer()
-    if not interaction.user.voice:
-        return await interaction.followup.send("Entra em call!")
-    vc = interaction.guild.voice_client
-    if not vc:
-        vc = await interaction.user.voice.channel.connect()
-    ydl_opts = {'format':'bestaudio','noplaylist':True,'quiet':True,'default_search':'ytsearch'}
-    ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(busca, download=False)
-        if 'entries' in info:
-            info = info['entries'][0]
+    try:
+        if not interaction.user.voice:
+            return await interaction.followup.send("Entra em call!")
+        vc = interaction.guild.voice_client
+        if not vc:
+            vc = await interaction.user.voice.channel.connect()
+
+        def get_info():
+            ydl_opts = {'format':'bestaudio','noplaylist':True,'quiet':True,'default_search':'ytsearch'}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(busca, download=False)
+                if 'entries' in info:
+                    info = info['entries'][0]
+                return info
+
+        info = await asyncio.to_thread(get_info)
         url = info['url']
         title = info.get('title', busca)
-    vc.stop()
-    vc.play(discord.FFmpegPCMAudio(url, **ffmpeg))
-    await interaction.followup.send(f"Tocando: **{title}**")
+
+        ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
+        vc.stop()
+        vc.play(discord.FFmpegPCMAudio(url, **ffmpeg))
+        await interaction.followup.send(f"Tocando: **{title}**")
+    except Exception as e:
+        print(f"ERRO: {e}")
+        await interaction.followup.send(f"Deu erro aqui: {e}")
 
 @bot.tree.command(name="parar", description="Para")
 async def parar(interaction: discord.Interaction):

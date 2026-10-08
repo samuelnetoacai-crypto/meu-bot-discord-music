@@ -1,3 +1,4 @@
 discord.py
-wavelink==3.4.1
+yt-dlp
 Flask
+PyNaCl

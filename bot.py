@@ -34,7 +34,14 @@ async def tocar(interaction: discord.Interaction, busca: str):
             vc = await interaction.user.voice.channel.connect()
 
         def get_info():
-            ydl_opts = {'format':'bestaudio','noplaylist':True,'quiet':True,'default_search':'ytsearch'}
+             ydl_opts = {
+            'format':'bestaudio/best',
+            'noplaylist':True,
+            'quiet':True,
+            'default_search':'ytsearch',
+            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+            'nocheckcertificate': True,
+                    }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(busca, download=False)
                 if 'entries' in info:

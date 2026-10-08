@@ -504,7 +504,7 @@ async def vender_tudo(interaction: discord.Interaction):
         total += info["valor"] * qtd
         lista.append(f"{info['emoji']} {nome} x{qtd}")
     dados[uid]["minerios"] = {}
-    dados[uid]["estrelas"] += total
+    adicionar_estrelas(interaction.user.id, total)
     salvar_dados(dados)
     await interaction.response.send_message(embed=discord.Embed(title="💰 Vendeu tudo!", description="\n".join(lista) + f"\n\n**+{total} ⭐ | Saldo: {dados[uid]['estrelas']} ⭐**", color=0xFFD700))
 
@@ -522,7 +522,7 @@ async def vender_minerio(interaction: discord.Interaction, minerio: str, quantid
     ganho = info["valor"] * qtd_vender
     dados[uid]["minerios"][info["nome"]] -= qtd_vender
     if dados[uid]["minerios"][info["nome"]] <= 0: del dados[uid]["minerios"][info["nome"]]
-    dados[uid]["estrelas"] += ganho
+    adicionar_estrelas(interaction.user.id, ganho)
     salvar_dados(dados)
     await interaction.response.send_message(f"💰 Vendeu **{qtd_vender}x {info['emoji']} {info['nome']}** por **{ganho} ⭐**! Saldo: {dados[uid]['estrelas']} ⭐")
 
@@ -535,7 +535,7 @@ async def loja(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
     lvl = dados.get(uid, {}).get("picareta", 1)
-    estrelas = dados.get(uid, {}).get("estrelas", 0)
+    estrelas = pegar_estrelas(interaction.user.id)
     embed = discord.Embed(title="🛒 Loja de Picaretas", description=f"Suas estrelas: **{estrelas} ⭐**\nAtual: **{PICARETAS[lvl]['nome']}**", color=0x2b2d31)
     for l, pic in PICARETAS.items():
         if l == 1: continue
@@ -555,10 +555,11 @@ async def comprar(interaction: discord.Interaction, picareta: str):
     if not alvo or alvo <= dados[uid]["picareta"]:
         await interaction.response.send_message("Você já tem essa!", ephemeral=True)
         return
-    if dados[uid]["estrelas"] < PICARETAS[alvo]["preco"]:
-        await interaction.response.send_message(f"Precisa de {PICARETAS[alvo]['preco']} ⭐", ephemeral=True)
-        return
-    dados[uid]["estrelas"] -= PICARETAS[alvo]["preco"]
+    preco = PICARETAS[alvo]["preco"]
+    if pegar_estrelas(interaction.user.id) < preco:
+    await interaction.response.send_message(f"Precisa de {preco} ⭐, você tem {pegar_estrelas(interaction.user.id)} ⭐", ephemeral=True)
+    return
+remover_estrelas(interaction.user.id, preco)
     dados[uid]["picareta"] = alvo
     salvar_dados(dados)
     await interaction.response.send_message(f"🎉 Comprou **{PICARETAS[alvo]['nome']}**!")

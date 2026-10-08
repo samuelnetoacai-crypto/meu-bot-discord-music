@@ -413,21 +413,7 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
 
     try:
         await destino.send(embed=embed)
-        if canal:
-            await interaction.response.send_message(f"Embed enviado em {canal.mention} ✅", ephemeral=True)
-        else:
-            await interaction.response.send_message("Embed criado ✅", ephemeral=True)
-            # apaga a resposta de confirmação pra não mostrar quem criou
-            # se mandou no mesmo canal, já enviou acima
-            # se quiser totalmente silencioso, comenta a linha abaixo
-            # mas aqui já mandei no canal e respondi ephemeral
-            # então o usuário só vê o embed limpo
-            await interaction.delete_original_response()
-            # reenvia o embed no canal sem rastro
-            # se já foi no mesmo canal, precisa mandar de novo porque a resposta foi deletada
-            # por isso vamos fazer assim:
-            if destino == interaction.channel:
-                await destino.send(embed=embed)
+                await interaction.response.send_message(f"Embed enviado em {destino.mention} ✅", ephemeral=True)
     except Exception as e:
         if not interaction.response.is_done():
             await interaction.response.send_message(f"Erro! Verifica o link da imagem e se tenho permissão no {destino.mention}\n`{e}`", ephemeral=True)

@@ -436,13 +436,13 @@ MINERIOS = [
     {"nome": "Cristal do Vazio", "emoji": "🌌", "chance": 0.3, "valor": 500000, "tier": 5},
 ]
 PICARETAS = {
-    1: {"nome": "Madeira", "preco": 0, "multiplicador": 1, "emoji": "🪵"},
-    2: {"nome": "Pedra", "preco": 20000, "multiplicador": 1.5, "emoji": "🪨"},
-    3: {"nome": "Ferro", "preco": 50000, "multiplicador": 2, "emoji": "⛓️"},
-    4: {"nome": "Ouro", "preco": 100000, "multiplicador": 2.5, "emoji": "🟡"},
-    5: {"nome": "Diamante", "preco": 250000, "multiplicador": 3, "emoji": "💎"},
-    6: {"nome": "Netherita", "preco": 500000, "multiplicador": 4.5, "emoji": "⬛"},
-    7: {"nome": "Vazio", "preco": 1000000, "multiplicador": 7, "emoji": "🌌"},
+    1: {"nome": "Madeira", "preco": 0, "multiplicador": 1, "emoji": "🪵", "max_tier": 1},
+    2: {"nome": "Pedra", "preco": 20000, "multiplicador": 1.5, "emoji": "🪨", "max_tier": 2},
+    3: {"nome": "Ferro", "preco": 50000, "multiplicador": 2, "emoji": "⛓️", "max_tier": 3},
+    4: {"nome": "Ouro", "preco": 100000, "multiplicador": 2.5, "emoji": "🟡", "max_tier": 3},
+    5: {"nome": "Diamante", "preco": 250000, "multiplicador": 3, "emoji": "💎", "max_tier": 4},
+    6: {"nome": "Netherita", "preco": 500000, "multiplicador": 4.5, "emoji": "⬛", "max_tier": 5},
+    7: {"nome": "Vazio", "preco": 1000000, "multiplicador": 7, "emoji": "🌌", "max_tier": 5},
 }
 ARQUIVO_MINERACAO = "inventario.json"
 

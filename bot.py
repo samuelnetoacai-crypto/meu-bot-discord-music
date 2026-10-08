@@ -8,6 +8,8 @@ import time
 from datetime import timedelta
 from flask import Flask
 import threading
+import json, os, random
+from datetime import datetime, timedelta
 
 # Servidor fake pro Render não dormir
 app_flask = Flask(__name__)
@@ -66,7 +68,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Online {bot.user}")
-    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Eu não sou um cosplay kawai de Pikachu"))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Vou eletrocutar todos vocês 😡"))
     try:
         synced = await bot.tree.sync()
         print(f"Syncou {len(synced)} comandos globais")

@@ -202,5 +202,149 @@ async def limpar(interaction: discord.Interaction, quantidade: int):
         await interaction.followup.send(embed=discord.Embed(title="Limpar 🧹", description=f"Apagadas **{len(apagadas)}** mensagens!", color=0x00BFFF), ephemeral=True)
     except Exception as e:
         await interaction.followup.send(f"Erro ao limpar: {e}", ephemeral=True)
+        ROUBO_FILE = "roubo.json"
+CAIXA_FILE = "caixa.json"
+
+def carregar_roubo():
+    if not os.path.exists(ROUBO_FILE):
+        return {}
+    try:
+        with open(ROUBO_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+def salvar_roubo(data):
+    with open(ROUBO_FILE, "w") as f:
+        json.dump(data, f)
+
+def carregar_caixa():
+    if not os.path.exists(CAIXA_FILE):
+        return {}
+    try:
+        with open(CAIXA_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+def salvar_caixa(data):
+    with open(CAIXA_FILE, "w") as f:
+        json.dump(data, f)
+
+@bot.tree.command(name="roubar", description="Tente roubar de 1200 a 4000 estrelas de alguém (30% de chance)")
+async def roubar(interaction: discord.Interaction, vitima: discord.Member):
+    if vitima.id == interaction.user.id or vitima.bot:
+        await interaction.response.send_message("Alvo inválido!", ephemeral=True)
+        return
+    roubo_data = carregar_roubo()
+    uid = str(interaction.user.id)
+    vid = str(vitima.id)
+    agora = time.time()
+    chave = f"{uid}_{vid}"
+    if chave in roubo_data and agora - roubo_data[chave] < 86400:
+        tr = 86400 - (agora - roubo_data[chave])
+        h = int(tr // 3600)
+        await interaction.response.send_message(f"Você já tentou roubar {vitima.mention} nas últimas 24h! Espere **{h}h**", ephemeral=True)
+        return
+    if pegar_estrelas(vitima.id) < 1200:
+        await interaction.response.send_message(f"{vitima.mention} tem menos de 1200 ⭐, não dá pra roubar", ephemeral=True)
+        return
+    if pegar_estrelas(interaction.user.id) < 200:
+        await interaction.response.send_message("Você precisa de pelo menos 200 ⭐ pra tentar roubar", ephemeral=True)
+        return
+    roubo_data[chave] = agora
+    salvar_roubo(roubo_data)
+    if random.random() < 0.30:
+        quantia = random.randint(1200, 4000)
+        quantia = min(quantia, pegar_estrelas(vitima.id))
+        remover_estrelas(vitima.id, quantia)
+        adicionar_estrelas(interaction.user.id, quantia)
+        await interaction.response.send_message(embed=discord.Embed(title="Roubo Sucesso! 🦹‍♂️", description=f"{interaction.user.mention} roubou **{quantia} ⭐** de {vitima.mention}! 💰", color=0x00FF00))
+    else:
+        multa = random.randint(100, 300)
+        remover_estrelas(interaction.user.id, multa)
+        await interaction.response.send_message(embed=discord.Embed(title="Roubo Falhou! 🚨", description=f"{interaction.user.mention} foi pego tentando roubar {vitima.mention} e perdeu **{multa} ⭐** de multa! 🤡", color=0xFF0000))
+
+@bot.tree.command(name="roleta", description="Gire a roleta e aposte suas estrelas")
+@app_commands.describe(quantidade="Quanto vai apostar", escolha="vermelho, preto, ou um numero de 0 a 14")
+async def roleta(interaction: discord.Interaction, quantidade: int, escolha: str):
+    escolha = escolha.lower()
+    if quantidade < 20 or pegar_estrelas(interaction.user.id) < quantidade:
+        await interaction.response.send_message(f"Saldo insuficiente! Você tem {pegar_estrelas(interaction.user.id)} ⭐ | Mínimo 20", ephemeral=True)
+        return
+    numero = random.randint(0, 14)
+    cor = "verde" if numero == 0 else "vermelho" if numero % 2 == 0 else "preto"
+    emoji = "🟢" if cor == "verde" else "🔴" if cor == "vermelho" else "⚫"
+    if escolha in ["vermelho", "preto"]:
+        if escolha == cor:
+            ganho = quantidade * 2
+            remover_estrelas(interaction.user.id, quantidade)
+            adicionar_estrelas(interaction.user.id, ganho)
+            await interaction.response.send_message(embed=discord.Embed(title=f"Roleta {emoji} {numero} - {cor}", description=f"Ganhou! Apostou {quantidade} ⭐ em **{escolha}** e levou **{ganho} ⭐** (2x)", color=0x00FF00))
+        else:
+            remover_estrelas(interaction.user.id, quantidade)
+            await interaction.response.send_message(embed=discord.Embed(title=f"Roleta {emoji} {numero} - {cor}", description=f"Perdeu! Apostou em **{escolha}** e deu **{cor}**. Perdeu {quantidade} ⭐", color=0xFF0000))
+    elif escolha.isdigit() and 0 <= int(escolha) <= 14:
+        if int(escolha) == numero:
+            ganho = quantidade * 14
+            remover_estrelas(interaction.user.id, quantidade)
+            adicionar_estrelas(interaction.user.id, ganho)
+            await interaction.response.send_message(embed=discord.Embed(title=f"Roleta 🎰 JACKPOT {numero}!", description=f"{interaction.user.mention} ACERTOU O NÚMERO! {quantidade} ⭐ viraram **{ganho} ⭐** (14x) 🤯", color=0xFFD700))
+        else:
+            remover_estrelas(interaction.user.id, quantidade)
+            await interaction.response.send_message(embed=discord.Embed(title=f"Roleta {emoji} {numero} - {cor}", description=f"Quase! Você escolheu **{escolha}** e deu **{numero}**. Perdeu {quantidade} ⭐", color=0x808080))
+    else:
+        await interaction.response.send_message("Escolha inválida! Use `vermelho`, `preto` ou um número de `0` a `14`", ephemeral=True)
+
+@bot.tree.command(name="caixa-misteriosa", description="Abra uma caixa misteriosa por 500 sonhos (2x por dia)")
+async def caixa_misteriosa(interaction: discord.Interaction):
+    preco = 500
+    if pegar_estrelas(interaction.user.id) < preco:
+        await interaction.response.send_message(f"Precisa de {preco} ⭐! Você tem {pegar_estrelas(interaction.user.id)} ⭐", ephemeral=True)
+        return
+
+    caixa_data = carregar_caixa()
+    uid = str(interaction.user.id)
+    agora = time.time()
+
+    # Pega usos das ultimas 24h
+    usos = caixa_data.get(uid, [])
+    usos_recentes = [t for t in usos if agora - t < 86400]
+
+    if len(usos_recentes) >= 2:
+        proximo = min(usos_recentes) + 86400
+        falta = int((proximo - agora) // 3600)
+        await interaction.response.send_message(f"Você já abriu 2 caixas nas últimas 24h! Volta em **{falta}h** 📦🔒", ephemeral=True)
+        return
+
+    remover_estrelas(interaction.user.id, preco)
+
+    sorte = random.random()
+    if sorte < 0.60:
+        ganho = random.randint(10, 400)
+        cor = 0xFF0000
+        msg = "Caixa meio vazia... 😭"
+    elif sorte < 0.90:
+        ganho = random.randint(500, 1200)
+        cor = 0x00BFFF
+        msg = "Boa! Lucro médio! ✨"
+    elif sorte < 0.99:
+        ganho = random.randint(1200, 3000)
+        cor = 0xA020F0
+        msg = "CAIXA RARA! 💜"
+    else:
+        ganho = random.randint(3000, 8000)
+        cor = 0xFFD700
+        msg = "CAIXA LENDÁRIA DOURADA!!! 👑🤯"
+
+    adicionar_estrelas(interaction.user.id, ganho)
+    usos_recentes.append(agora)
+    caixa_data[uid] = usos_recentes
+    salvar_caixa(caixa_data)
+
+    lucro = ganho - preco
+    await interaction.response.send_message(embed=discord.Embed(
+        title=f"Caixa Misteriosa 📦 {msg}",
+        description=f"{interaction.user.mention} pagou {preco} ⭐ e ganhou **{ganho} ⭐**!\n**Lucro:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2" if lucro >= 0 else f"{interaction.user.mention} pagou {preco} ⭐ e ganhou só **{ganho} ⭐**!\n**Prejuízo:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2",
+        color=cor
+    ))
 
 bot.run(os.environ.get("DISCORD_TOKEN"))

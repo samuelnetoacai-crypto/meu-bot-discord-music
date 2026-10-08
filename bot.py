@@ -419,7 +419,39 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
             await interaction.response.send_message(f"Erro! Verifica o link da imagem e se tenho permissão no {destino.mention}\n`{e}`", ephemeral=True)
         else:
             await interaction.followup.send(f"Erro! `{e}`", ephemeral=True)
-@tree.command(name="minerar", description="Minere (10x por dia)")
+# ================= MINERAÇÃO =================
+MINERIOS = [
+    {"nome": "Pedra", "emoji": "🪨", "chance": 30, "valor": 1, "tier": 1},
+    {"nome": "Carvão", "emoji": "⚫", "chance": 20, "valor": 3, "tier": 1},
+    {"nome": "Cobre", "emoji": "🟠", "chance": 15, "valor": 8, "tier": 2},
+    {"nome": "Ferro", "emoji": "⛓️", "chance": 12, "valor": 15, "tier": 2},
+    {"nome": "Ouro", "emoji": "🟡", "chance": 8, "valor": 35, "tier": 3},
+    {"nome": "Lapis Lazuli", "emoji": "🔵", "chance": 5, "valor": 60, "tier": 3},
+    {"nome": "Redstone", "emoji": "🔴", "chance": 4, "valor": 90, "tier": 3},
+    {"nome": "Esmeralda", "emoji": "🟢", "chance": 2.5, "valor": 200, "tier": 4},
+    {"nome": "Diamante", "emoji": "💎", "chance": 1.5, "valor": 500, "tier": 4},
+    {"nome": "Netherita", "emoji": "⬛", "chance": 0.7, "valor": 1500, "tier": 5},
+    {"nome": "Cristal do Vazio", "emoji": "🌌", "chance": 0.3, "valor": 5000, "tier": 5},
+]
+PICARETAS = {
+    1: {"nome": "Madeira", "max_tier": 2, "preco": 0, "emoji": "🪵"},
+    2: {"nome": "Ferro", "max_tier": 3, "preco": 100, "emoji": "⛓️"},
+    3: {"nome": "Diamante", "max_tier": 4, "preco": 1000, "emoji": "💎"},
+    4: {"nome": "Netherita", "max_tier": 5, "preco": 5000, "emoji": "⬛"},
+}
+ARQUIVO_MINERACAO = "inventario.json"
+
+def carregar_dados():
+    if not os.path.exists(ARQUIVO_MINERACAO): return {}
+    with open(ARQUIVO_MINERACAO, "r") as f: return json.load(f)
+def salvar_dados(d):
+    with open(ARQUIVO_MINERACAO, "w") as f: json.dump(d, f, indent=4)
+def sortear_minerio(lvl):
+    max_tier = PICARETAS[lvl]["max_tier"]
+    possiveis = [m for m in MINERIOS if m["tier"] <= max_tier]
+    return random.choices(possiveis, weights=[m["chance"] for m in possiveis], k=1)[0]
+
+@bot.tree.command(name="minerar", description="Minere (10x por dia)")
 async def minerar(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -440,7 +472,7 @@ async def minerar(interaction: discord.Interaction):
     embed = discord.Embed(title=f"⛏️ {minerio['emoji']} {minerio['nome']}!", description=f"Valor: {minerio['valor']} ⭐\nRestam {10-dados[uid]['min_dia']}/10 hoje.", color=0x2b2d31)
     await interaction.response.send_message(embed=embed)
 
-@tree.command(name="inventario", description="Veja seus minérios")
+@bot.tree.command(name="inventario", description="Veja seus minérios")
 async def inventario(interaction: discord.Interaction):
     dados = carregar_dados()
     u = dados.get(str(interaction.user.id))
@@ -456,7 +488,7 @@ async def inventario(interaction: discord.Interaction):
     desc += f"\n**Total se vender tudo: {total} ⭐**"
     await interaction.response.send_message(embed=discord.Embed(title=f"Inventário - {interaction.user.display_name}", description=desc, color=0x2b2d31))
 
-@tree.command(name="vender_tudo", description="Venda TODOS os minérios")
+@bot.tree.command(name="vender_tudo", description="Venda TODOS os minérios")
 async def vender_tudo(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -474,7 +506,7 @@ async def vender_tudo(interaction: discord.Interaction):
     salvar_dados(dados)
     await interaction.response.send_message(embed=discord.Embed(title="💰 Vendeu tudo!", description="\n".join(lista) + f"\n\n**+{total} ⭐ | Saldo: {dados[uid]['estrelas']} ⭐**", color=0xFFD700))
 
-@tree.command(name="vender_minerio", description="Venda um minério específico")
+@bot.tree.command(name="vender_minerio", description="Venda um minério específico")
 @app_commands.describe(minerio="Qual minério", quantidade="Quanto (vazio = tudo desse)")
 async def vender_minerio(interaction: discord.Interaction, minerio: str, quantidade: int = None):
     dados = carregar_dados()
@@ -493,10 +525,10 @@ async def vender_minerio(interaction: discord.Interaction, minerio: str, quantid
     await interaction.response.send_message(f"💰 Vendeu **{qtd_vender}x {info['emoji']} {info['nome']}** por **{ganho} ⭐**! Saldo: {dados[uid]['estrelas']} ⭐")
 
 @vender_minerio.autocomplete("minerio")
-async def ac_vender(interaction, current: str):
+async def ac_vender(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=m["nome"], value=m["nome"]) for m in MINERIOS if current.lower() in m["nome"].lower()][:25]
 
-@tree.command(name="loja", description="Evolua sua picareta")
+@bot.tree.command(name="loja", description="Evolua sua picareta")
 async def loja(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -509,7 +541,7 @@ async def loja(interaction: discord.Interaction):
         embed.add_field(name=f"{pic['emoji']} {pic['nome']}", value=status, inline=False)
     await interaction.response.send_message(embed=embed)
 
-@tree.command(name="comprar", description="Compre uma picareta")
+@bot.tree.command(name="comprar", description="Compre uma picareta")
 @app_commands.describe(picareta="Qual picareta")
 async def comprar(interaction: discord.Interaction, picareta: str):
     dados = carregar_dados()
@@ -530,7 +562,7 @@ async def comprar(interaction: discord.Interaction, picareta: str):
     await interaction.response.send_message(f"🎉 Comprou **{PICARETAS[alvo]['nome']}**!")
 
 @comprar.autocomplete("picareta")
-async def ac_comprar(interaction, current: str):
-    return [app_commands.Choice(name=p["nome"], value=p["nome"]) for p in PICARETAS.values() if current.lower() in p["nome"].lower()][:25]  
+async def ac_comprar(interaction: discord.Interaction, current: str):
+    return [app_commands.Choice(name=p["nome"], value=p["nome"]) for p in PICARETAS.values() if current.lower() in p["nome"].lower()][:25]
     
 bot.run(os.environ.get("DISCORD_TOKEN"))

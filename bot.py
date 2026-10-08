@@ -45,7 +45,9 @@ async def tocar(interaction: discord.Interaction, busca: str):
 
         ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
         vc.stop()
-        vc.play(discord.FFmpegPCMAudio(url, **ffmpeg))
+        import imageio_ffmpeg
+ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+vc.play(discord.FFmpegPCMAudio(url, executable=ffmpeg_exe, **ffmpeg))
         await interaction.followup.send(f"Tocando: **{title}**")
     except Exception as e:
         print(f"ERRO: {e}")

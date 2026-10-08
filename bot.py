@@ -385,14 +385,14 @@ async def caixa_misteriosa(interaction: discord.Interaction):
     titulo="Título do embed",
     descricao="Texto/descrição do embed",
     cor="Cor em hexadecimal ex: #FFD700 ou #FF0000 (padrão amarelo)",
-    imagem="Link da imagem (opcional)"
+    imagem="Link da imagem (opcional)",
+    canal="Canal onde enviar o embed (opcional, padrão: aqui)"
 )
-async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: str, cor: str = "#FFD700", imagem: str = None):
+async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: str, cor: str = "#FFD700", imagem: str = None, canal: discord.TextChannel = None):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message("Você precisa ter permissão de **Administrador** pra usar isso! 🔒", ephemeral=True)
         return
 
-    # Converte #FFD700 pra número
     try:
         cor_limpa = cor.replace("#", "").strip()
         cor_final = int(cor_limpa, 16)
@@ -405,14 +405,33 @@ async def criar_embed(interaction: discord.Interaction, titulo: str, descricao: 
         description=descricao,
         color=cor_final
     )
-    embed.set_footer(text=f"Criado por {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None)
 
     if imagem:
         embed.set_image(url=imagem)
 
+    destino = canal if canal else interaction.channel
+
     try:
-        await interaction.response.send_message(embed=embed)
+        await destino.send(embed=embed)
+        if canal:
+            await interaction.response.send_message(f"Embed enviado em {canal.mention} ✅", ephemeral=True)
+        else:
+            await interaction.response.send_message("Embed criado ✅", ephemeral=True)
+            # apaga a resposta de confirmação pra não mostrar quem criou
+            # se mandou no mesmo canal, já enviou acima
+            # se quiser totalmente silencioso, comenta a linha abaixo
+            # mas aqui já mandei no canal e respondi ephemeral
+            # então o usuário só vê o embed limpo
+            await interaction.delete_original_response()
+            # reenvia o embed no canal sem rastro
+            # se já foi no mesmo canal, precisa mandar de novo porque a resposta foi deletada
+            # por isso vamos fazer assim:
+            if destino == interaction.channel:
+                await destino.send(embed=embed)
     except Exception as e:
-        await interaction.response.send_message(f"Erro ao criar embed! Verifica se o link da imagem é válido.\n`{e}`", ephemeral=True)
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"Erro! Verifica o link da imagem e se tenho permissão no {destino.mention}\n`{e}`", ephemeral=True)
+        else:
+            await interaction.followup.send(f"Erro! `{e}`", ephemeral=True)
         
 bot.run(os.environ.get("DISCORD_TOKEN"))

@@ -79,11 +79,11 @@ async def on_ready():
         print(f"Erro sync: {e}")
 
 # --- ECONOMIA ---
-@bot.tree.command(name="banco", description="Veja quantas estrelas você tem")
+@bot.tree.command(name="Ver Estrelas", description="Veja quantas estrelas você tem")
 async def banco(interaction: discord.Interaction):
     await interaction.response.send_message(f"{interaction.user.mention} você tem **{pegar_estrelas(interaction.user.id)} ⭐ estrelas**")
 
-@bot.tree.command(name="daily", description="Pegue suas estrelas diárias!")
+@bot.tree.command(name="Daily", description="Pegue suas estrelas diárias!")
 async def daily(interaction: discord.Interaction):
     daily_data = carregar_daily()
     uid = str(interaction.user.id)
@@ -99,7 +99,7 @@ async def daily(interaction: discord.Interaction):
     salvar_daily(daily_data)
     await interaction.response.send_message(embed=discord.Embed(title="Daily 💰", description=f"{interaction.user.mention} ganhou **{ganho} ⭐**! Total: **{total} ⭐**", color=0x00FF00))
 
-@bot.tree.command(name="pagar", description="Dê estrelas para alguém")
+@bot.tree.command(name="Pay", description="Dê estrelas para alguém")
 async def pagar(interaction: discord.Interaction, usuario: discord.Member, quantidade: int):
     if usuario.id == interaction.user.id or quantidade <= 0:
         await interaction.response.send_message("Quantidade inválida!", ephemeral=True)
@@ -111,7 +111,7 @@ async def pagar(interaction: discord.Interaction, usuario: discord.Member, quant
     adicionar_estrelas(usuario.id, quantidade)
     await interaction.response.send_message(embed=discord.Embed(title="Pagar 💸", description=f"{interaction.user.mention} pagou **{quantidade} ⭐** para {usuario.mention}!", color=0x00BFFF))
 
-@bot.tree.command(name="rank", description="Veja o ranking de estrelas")
+@bot.tree.command(name="Rank", description="Veja o ranking de estrelas no servidor")
 async def rank(interaction: discord.Interaction):
     banco = carregar_banco()
     if not banco:
@@ -121,7 +121,7 @@ async def rank(interaction: discord.Interaction):
     desc = "".join([f"{'🥇' if i==1 else '🥈' if i==2 else '🥉' if i==3 else f'**{i}°**'} <@{uid}> - **{est} ⭐**\n" for i, (uid, est) in enumerate(ranking, 1)])
     await interaction.response.send_message(embed=discord.Embed(title="Estrelas Rank 🏆", description=desc, color=0xFFD700))
 
-@bot.tree.command(name="editar-estrelas", description="Editar estrelas de um membro (ADM)")
+@bot.tree.command(name="Editar Estrelas", description="Editar estrelas de um membro")
 @app_commands.default_permissions(administrator=True)
 async def editar_estrelas(interaction: discord.Interaction, usuario: discord.Member, quantidade: int):
     if not interaction.user.guild_permissions.administrator:
@@ -136,7 +136,7 @@ async def editar_estrelas(interaction: discord.Interaction, usuario: discord.Mem
         await interaction.response.send_message(embed=discord.Embed(title="Editar 🛠️", description=f"Removido **{abs(quantidade)} ⭐** de {usuario.mention}! Total: **{total} ⭐**", color=0xFF0000), ephemeral=True)
 
 # --- MODERAÇÃO ---
-@bot.tree.command(name="banir", description="Bane um membro do servidor")
+@bot.tree.command(name="Ban", description="Bane um membro do servidor")
 @app_commands.default_permissions(ban_members=True)
 async def banir(interaction: discord.Interaction, usuario: discord.Member, motivo: str = "Sem motivo"):
     if not interaction.user.guild_permissions.ban_members:
@@ -148,7 +148,7 @@ async def banir(interaction: discord.Interaction, usuario: discord.Member, motiv
     except Exception as e:
         await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="expulsar", description="Expulsa um membro do servidor")
+@bot.tree.command(name="Expulsar", description="Expulsa um membro do servidor")
 @app_commands.default_permissions(kick_members=True)
 async def expulsar(interaction: discord.Interaction, usuario: discord.Member, motivo: str = "Sem motivo"):
     if not interaction.user.guild_permissions.kick_members:
@@ -160,7 +160,7 @@ async def expulsar(interaction: discord.Interaction, usuario: discord.Member, mo
     except Exception as e:
         await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="mutar", description="Muta um membro por um tempo")
+@bot.tree.command(name="Mute", description="Muta um membro por um tempo")
 @app_commands.default_permissions(moderate_members=True)
 async def mutar(interaction: discord.Interaction, usuario: discord.Member, minutos: int, motivo: str = "Sem motivo"):
     if not interaction.user.guild_permissions.moderate_members:
@@ -177,7 +177,7 @@ async def mutar(interaction: discord.Interaction, usuario: discord.Member, minut
     except Exception as e:
         await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="desmutar", description="Desmuta um membro")
+@bot.tree.command(name="Desmute", description="Desmuta um membro")
 @app_commands.default_permissions(moderate_members=True)
 async def desmutar(interaction: discord.Interaction, usuario: discord.Member):
     if not interaction.user.guild_permissions.moderate_members:
@@ -189,7 +189,7 @@ async def desmutar(interaction: discord.Interaction, usuario: discord.Member):
     except Exception as e:
         await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="limpar", description="Apaga uma quantidade de mensagens")
+@bot.tree.command(name="Limpar Mensagens", description="Apaga uma quantidade de mensagens")
 @app_commands.default_permissions(manage_messages=True)
 async def limpar(interaction: discord.Interaction, quantidade: int):
     if not interaction.user.guild_permissions.manage_messages:
@@ -233,7 +233,7 @@ def salvar_caixa(data):
     with open(CAIXA_FILE, "w") as f:
         json.dump(data, f)
 
-@bot.tree.command(name="roubar", description="Tente roubar de 1200 a 4000 sonhos (máx 3 por dia)")
+@bot.tree.command(name="Roubar", description="Tente roubar os sonhos de alguém!")
 async def roubar(interaction: discord.Interaction, vitima: discord.Member):
     try:
         if vitima.id == interaction.user.id or vitima.bot:
@@ -299,7 +299,7 @@ async def roubar(interaction: discord.Interaction, vitima: discord.Member):
         if not interaction.response.is_done():
             await interaction.response.send_message(f"Erro: {e}", ephemeral=True)
 
-@bot.tree.command(name="roleta", description="Gire a roleta e aposte suas estrelas")
+@bot.tree.command(name="Roleta Ratinho", description="Gire a roleta e aposte suas estrelas")
 @app_commands.describe(quantidade="Quanto vai apostar", escolha="vermelho, preto, ou um numero de 0 a 14")
 async def roleta(interaction: discord.Interaction, quantidade: int, escolha: str):
     escolha = escolha.lower()
@@ -330,7 +330,7 @@ async def roleta(interaction: discord.Interaction, quantidade: int, escolha: str
     else:
         await interaction.response.send_message("Escolha inválida! Use `vermelho`, `preto` ou um número de `0` a `14`", ephemeral=True)
 
-@bot.tree.command(name="caixa-misteriosa", description="Abra uma caixa misteriosa por 500 sonhos (2x por dia)")
+@bot.tree.command(name="Caixa Misteriosa", description="Abra uma caixa misteriosa por 500 estrelas")
 async def caixa_misteriosa(interaction: discord.Interaction):
     preco = 500
     if pegar_estrelas(interaction.user.id) < preco:
@@ -382,7 +382,7 @@ async def caixa_misteriosa(interaction: discord.Interaction):
         description=f"{interaction.user.mention} pagou {preco} ⭐ e ganhou **{ganho} ⭐**!\n**Lucro:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2" if lucro >= 0 else f"{interaction.user.mention} pagou {preco} ⭐ e ganhou só **{ganho} ⭐**!\n**Prejuízo:** {lucro} ⭐ | Usos hoje: {len(usos_recentes)}/2",
         color=cor
     ))
-@bot.tree.command(name="criar-embed", description="Cria um embed personalizado (apenas administradores)")
+@bot.tree.command(name="Criar Embed", description="Cria um embed personalizado")
 @app_commands.describe(
     titulo="Título do embed",
     descricao="Texto/descrição do embed",
@@ -456,7 +456,7 @@ def sortear_minerio(lvl):
     possiveis = [m for m in MINERIOS if m["tier"] <= max_tier]
     return random.choices(possiveis, weights=[m["chance"] for m in possiveis], k=1)[0]
 
-@bot.tree.command(name="minerar", description="Minere (10x por dia)")
+@bot.tree.command(name="Minerar", description="Minere para conseguir estrelas!")
 async def minerar(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -477,7 +477,7 @@ async def minerar(interaction: discord.Interaction):
     embed = discord.Embed(title=f"⛏️ {minerio['emoji']} {minerio['nome']}!", description=f"Valor: {minerio['valor']} ⭐\nRestam {10-dados[uid]['min_dia']}/10 hoje.", color=0x2b2d31)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="inventario", description="Veja seus minérios")
+@bot.tree.command(name="Inventário", description="Veja seus minérios")
 async def inventario(interaction: discord.Interaction):
     dados = carregar_dados()
     u = dados.get(str(interaction.user.id))
@@ -493,7 +493,7 @@ async def inventario(interaction: discord.Interaction):
     desc += f"\n**Total se vender tudo: {total} ⭐**"
     await interaction.response.send_message(embed=discord.Embed(title=f"Inventário - {interaction.user.display_name}", description=desc, color=0x2b2d31))
 
-@bot.tree.command(name="vender_tudo", description="Venda TODOS os minérios")
+@bot.tree.command(name="Vender Tudo", description="Venda TODOS os minérios")
 async def vender_tudo(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -511,7 +511,7 @@ async def vender_tudo(interaction: discord.Interaction):
     salvar_dados(dados)
     await interaction.response.send_message(embed=discord.Embed(title="💰 Vendeu tudo!", description="\n".join(lista) + f"\n\n**+{total} ⭐ | Saldo: {dados[uid]['estrelas']} ⭐**", color=0xFFD700))
 
-@bot.tree.command(name="vender_minerio", description="Venda um minério específico")
+@bot.tree.command(name="Vender Minério Específico", description="Venda um minério específico")
 @app_commands.describe(minerio="Qual minério", quantidade="Quanto (vazio = tudo desse)")
 async def vender_minerio(interaction: discord.Interaction, minerio: str, quantidade: int = None):
     dados = carregar_dados()
@@ -533,7 +533,7 @@ async def vender_minerio(interaction: discord.Interaction, minerio: str, quantid
 async def ac_vender(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=m["nome"], value=m["nome"]) for m in MINERIOS if current.lower() in m["nome"].lower()][:25]
 
-@bot.tree.command(name="loja", description="Evolua sua picareta")
+@bot.tree.command(name="Lojinha de Picaretas", description="Evolua sua picareta")
 async def loja(interaction: discord.Interaction):
     dados = carregar_dados()
     uid = str(interaction.user.id)
@@ -546,7 +546,7 @@ async def loja(interaction: discord.Interaction):
         embed.add_field(name=f"{pic['emoji']} {pic['nome']}", value=status, inline=False)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="comprar", description="Compre uma picareta")
+@bot.tree.command(name="Comprar Picareta", description="Compre uma picareta")
 @app_commands.describe(picareta="Qual picareta")
 async def comprar(interaction: discord.Interaction, picareta: str):
     dados = carregar_dados()

@@ -5,6 +5,7 @@ import yt_dlp
 import asyncio
 from flask import Flask
 import threading
+import imageio_ffmpeg
 
 app_flask = Flask(__name__)
 @app_flask.route('/')
@@ -45,7 +46,6 @@ async def tocar(interaction: discord.Interaction, busca: str):
 
         ffmpeg = {'before_options':'-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options':'-vn'}
         vc.stop()
-        import imageio_ffmpeg
 ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
 vc.play(discord.FFmpegPCMAudio(url, executable=ffmpeg_exe, **ffmpeg))
         await interaction.followup.send(f"Tocando: **{title}**")

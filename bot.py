@@ -29,9 +29,9 @@ async def on_ready():
     )
     try:
         nodes = [
-            wavelink.Node(uri='https://lava-v4.ajieblogs.my.eu.org:443', password='https://dsc.gg/ajidevserver'),
-            wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass'),
-            wavelink.Node(uri='https://lavalinkv4-id.serenetia.com:443', password='https://dsc.gg/serenetia')
+        wavelink.Node(uri='http://lavalink.jirayu.net:13592', password='youshallnotpass'),
+        wavelink.Node(uri='http://209.126.86.74:2333', password='youshallnotpass'),
+        wavelink.Node(uri='http://162.19.244.175:2333', password='youshallnotpass')            
         ]
         await wavelink.Pool.connect(nodes=nodes, client=bot, cache_capacity=100)
         print("✅ Lavalink conectado!")

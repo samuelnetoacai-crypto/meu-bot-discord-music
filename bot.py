@@ -557,13 +557,12 @@ async def comprar(interaction: discord.Interaction, picareta: str):
         return
     preco = PICARETAS[alvo]["preco"]
     if pegar_estrelas(interaction.user.id) < preco:
-    await interaction.response.send_message(f"Precisa de {preco} ⭐, você tem {pegar_estrelas(interaction.user.id)} ⭐", ephemeral=True)
-    return
-remover_estrelas(interaction.user.id, preco)
+        await interaction.response.send_message(f"Precisa de {preco} ⭐, você tem {pegar_estrelas(interaction.user.id)} ⭐", ephemeral=True)
+        return
+    remover_estrelas(interaction.user.id, preco)
     dados[uid]["picareta"] = alvo
     salvar_dados(dados)
     await interaction.response.send_message(f"🎉 Comprou **{PICARETAS[alvo]['nome']}**!")
-
 @comprar.autocomplete("picareta")
 async def ac_comprar(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=p["nome"], value=p["nome"]) for p in PICARETAS.values() if current.lower() in p["nome"].lower()][:25]

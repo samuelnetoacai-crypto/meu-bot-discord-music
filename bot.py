@@ -68,7 +68,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Online {bot.user}")
-    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Vou eletrocutar todos vocês 😡"))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Game(name="Vou eletrocutar quem quebrar as regras"))
     try:
         synced = await bot.tree.sync()
         print(f"Syncou {len(synced)} comandos globais")
